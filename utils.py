@@ -8,7 +8,7 @@
 import os
 import streamlit as st
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain.schema import HumanMessage
+from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
 from langchain.chains import create_history_aware_retriever, create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
@@ -18,8 +18,12 @@ import constants as ct
 ############################################################
 # 設定関連
 ############################################################
-# 「.env」ファイルで定義した環境変数の読み込み
-load_dotenv()
+# dotenv はローカルだけで使えればOK
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ModuleNotFoundError:
+    pass
 
 
 ############################################################
