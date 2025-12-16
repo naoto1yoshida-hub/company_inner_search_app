@@ -11,7 +11,6 @@ from logging.handlers import TimedRotatingFileHandler
 from uuid import uuid4
 import sys
 import unicodedata
-from dotenv import load_dotenv
 import streamlit as st
 from docx import Document
 from langchain_community.document_loaders import WebBaseLoader
@@ -24,26 +23,23 @@ import constants as ct
 ############################################################
 # 設定関連
 ############################################################
-# 「.env」ファイルで定義した環境変数の読み込み
+# dotenv はローカル実行時のみ有効
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ModuleNotFoundError:
+    pass
 
-# ローカル実行時のみ .env を読む（Cloudでは無視される）
-load_dotenv()
+API_KEY = (
+    st.secrets.get("OPENAI_API_KEY")
+    if hasattr(st, "secrets")
+    else None
+) or os.getenv("OPENAI_API_KEY")
 
-def get_api_key() -> str:
-    # 優先順位
-    # 1. Streamlit Secrets（Cloud）
-    # 2. 環境変数（local / Cloud）
-    api_key = (
-        st.secrets.get("OPENAI_API_KEY")
-        if hasattr(st, "secrets")
-        else None
-    ) or os.getenv("OPENAI_API_KEY")
+if not API_KEY:
+    st.error("OPENAI_API_KEY が設定されていません")
+    st.stop()
 
-    if not api_key:
-        st.error("OPENAI_API_KEY が設定されていません")
-        st.stop()
-
-    return api_key
 ############################################################
 # 関数定義
 ############################################################
@@ -135,7 +131,10 @@ def initialize_retriever():
             doc.metadata[key] = adjust_string(doc.metadata[key])
     
     # 埋め込みモデルの用意
-    embeddings = OpenAIEmbeddings()
+    embeddings = OpenAIEmbeddings(
+    api_key=API_KEY
+)
+
     
     # チャンク分割用のオブジェクトを作成
     text_splitter = CharacterTextSplitter(
