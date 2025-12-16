@@ -25,9 +25,25 @@ import constants as ct
 # 設定関連
 ############################################################
 # 「.env」ファイルで定義した環境変数の読み込み
+
+# ローカル実行時のみ .env を読む（Cloudでは無視される）
 load_dotenv()
 
+def get_api_key() -> str:
+    # 優先順位
+    # 1. Streamlit Secrets（Cloud）
+    # 2. 環境変数（local / Cloud）
+    api_key = (
+        st.secrets.get("OPENAI_API_KEY")
+        if hasattr(st, "secrets")
+        else None
+    ) or os.getenv("OPENAI_API_KEY")
 
+    if not api_key:
+        st.error("OPENAI_API_KEY が設定されていません")
+        st.stop()
+
+    return api_key
 ############################################################
 # 関数定義
 ############################################################
